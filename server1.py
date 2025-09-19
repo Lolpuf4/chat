@@ -105,9 +105,8 @@ def send_msg(DM_user, client, username):
         if information == b"" or information == b"1":
             print("stopped receiving information")
             send_error(client, "1")
-            del socket_user[username]
+
             del user_DMuser[username]
-            client.close()
             break
         date = datetime.datetime.now().strftime("%d/%m/%y")
         time = datetime.datetime.now().strftime("%H:%M:%S")
