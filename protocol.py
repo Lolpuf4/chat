@@ -19,7 +19,7 @@ def recv(socket):
     file_name = header_split[2]
     information = get_info(socket, int(size))
     file_name = file_name.replace("*", "")[:-1]
-
+    print("header -----------------------------------",header)
     if data_type == "TXT" or data_type == "ERR":
         return [data_type, information.decode()]
     else:
