@@ -68,7 +68,10 @@ socket_user = {}
 user_DMuser = {}
 def get_username(client):
     username = recv(client)[1]
+    print("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",username)
     password = recv(client)[1]
+
+
     if not execute_command(f"SELECT username FROM users WHERE username = {username} AND password = {password};", "admin", "123", "messenger"):
         send_error(client, "authentication failed")
         return None
