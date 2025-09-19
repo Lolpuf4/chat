@@ -125,44 +125,45 @@ def send_msg(DM_user, client, username):
             recv_user = socket_user[DM_user]
             send_text(recv_user, full_message)
 def handle_client(client, address):
-    print(f"working on: {address}")
-    username= get_username(client)
-    if not username:
-        return
+    while True:
+        print(f"working on: {address}")
+        username= get_username(client)
+        if not username:
+            return
 
-    socket_user[username] = client
-    DM_user = choose_DM(username, client)
-    user_DMuser[username] = DM_user
-    senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
-    receiverID = execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
+        socket_user[username] = client
+        DM_user = choose_DM(username, client)
+        user_DMuser[username] = DM_user
+        senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
+        receiverID = execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
 
-    old_msgs_sender = execute_command(f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
-                               f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID};", "admin", "123", "messenger")
+        old_msgs_sender = execute_command(f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
+                                   f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID};", "admin", "123", "messenger")
 
-    old_msgs_receiver = execute_command(
-        f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
-        f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {senderID} AND message_history.senderID = {receiverID};",
-        "admin", "123", "messenger")
+        old_msgs_receiver = execute_command(
+            f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
+            f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {senderID} AND message_history.senderID = {receiverID};",
+            "admin", "123", "messenger")
 
-    old_msgs = old_msgs_sender + old_msgs_receiver
-
-
-    sort_chat_msgs(old_msgs)
-
-    amount_of_spaces = 10
-
-    chat = ""
-
-    for record in old_msgs:
-        if record["message_history.receiverID"] == receiverID:
-            chat += f"                       {record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
-        else:
-            chat += f"{record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
-
-    send_text(client, chat)
+        old_msgs = old_msgs_sender + old_msgs_receiver
 
 
-    send_msg(DM_user, client, username)
+        sort_chat_msgs(old_msgs)
+
+        amount_of_spaces = 10
+
+        chat = ""
+
+        for record in old_msgs:
+            if record["message_history.receiverID"] == receiverID:
+                chat += f"                       {record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
+            else:
+                chat += f"{record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
+
+        send_text(client, chat)
+
+
+        send_msg(DM_user, client, username)
     # finally:
     #     del socket_user[username]
     #     del user_DMuser[username]
