@@ -3,6 +3,7 @@ import threading
 import os
 import datetime
 import json
+import time
 
 from errors import*
 from protocol import*
@@ -42,7 +43,7 @@ def connect():
 
 def choose_DM():
     information = recv(socket_test_client)[1]
-    print(information)
+    print(information, "CHOOOOOOOSE DM")
     num = input("enter a number of the user you would like to DM ")
     send_text(socket_test_client, num)
 
@@ -66,6 +67,7 @@ def send_data():
             break
         else:
             send_text(socket_test_client, msg)
+    time.sleep(0.4)
 
 
 HOST = "62.60.178.229"
@@ -77,7 +79,6 @@ socket_test_client.connect((HOST, PORT))
 
 connect()
 while True:
-
     choose_DM()
     get_old_chat()
 
