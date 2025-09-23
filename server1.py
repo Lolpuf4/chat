@@ -96,6 +96,8 @@ def choose_DM(username, client):
     send_text(client, choose_DM_msg)
 
     information = recv(client)[1]
+    if information == "exit":
+        return "exit"
     DM_user = DMs[int(information)]
     return DM_user
 
@@ -108,7 +110,7 @@ def send_msg(DM_user, client, username):
         if information == b"1":
             print("stopped receiving information")
             send_error(client, "1")
-
+            client.close()
             del user_DMuser[username]
             break
         date = datetime.datetime.now().strftime("%d/%m/%y")
@@ -132,6 +134,10 @@ def handle_client(client, address):
     while True:
         socket_user[username] = client
         DM_user = choose_DM(username, client)
+        if DM_user == "exit":
+            del user_DMuser[username]
+            client.close()
+            break
         user_DMuser[username] = DM_user
         senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
         receiverID = execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]

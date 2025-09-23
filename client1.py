@@ -46,6 +46,7 @@ def choose_DM():
     print(information, "CHOOOOOOOSE DM")
     num = input("enter a number of the user you would like to DM ")
     send_text(socket_test_client, num)
+    return num
 
 def get_old_chat():
     information = recv(socket_test_client)[1]
@@ -79,7 +80,10 @@ socket_test_client.connect((HOST, PORT))
 
 connect()
 while True:
-    choose_DM()
+
+    if choose_DM() == "exit":
+        break
+
     get_old_chat()
 
     get_data = threading.Thread(target = getdata, args = [socket_test_client])
