@@ -105,7 +105,7 @@ def send_msg(DM_user, client, username):
         information = recv(client)[1].encode()
 
         print("information", information)
-        if information == b"" or information == b"1":
+        if information == b"1":
             print("stopped receiving information")
             send_error(client, "1")
 
@@ -125,12 +125,11 @@ def send_msg(DM_user, client, username):
             recv_user = socket_user[DM_user]
             send_text(recv_user, full_message)
 def handle_client(client, address):
+    print(f"working on: {address}")
+    username = get_username(client)
+    if not username:
+        return
     while True:
-        print(f"working on: {address}")
-        username= get_username(client)
-        if not username:
-            return
-
         socket_user[username] = client
         DM_user = choose_DM(username, client)
         user_DMuser[username] = DM_user
@@ -169,7 +168,9 @@ def handle_client(client, address):
     #     del user_DMuser[username]
     #     client.close()
 
-HOST = "0.0.0.0"
+
+#HOST = "0.0.0.0"
+HOST = "127.0.0.1"
 PORT = 10001
 
 socket_test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

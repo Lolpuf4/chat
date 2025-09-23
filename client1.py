@@ -53,8 +53,10 @@ def get_old_chat():
 def getdata(client):
     while True:
         information = recv(client)[1].encode()
-        if information == b"" or information == b"1":
+        if information == b"1":
             break
+        elif information == b"":
+            continue
         print("\n" + information.decode())
 def send_data():
     while True:
@@ -66,15 +68,16 @@ def send_data():
             send_text(socket_test_client, msg)
 
 
-HOST = "62.60.178.229"
+#HOST = "62.60.178.229"
+HOST = "127.0.0.1"
 PORT = 10001
 
 socket_test_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_test_client.connect((HOST, PORT))
 
+connect()
 while True:
 
-    connect()
     choose_DM()
     get_old_chat()
 

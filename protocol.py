@@ -49,5 +49,5 @@ def send_error(socket_recv, text:str):
 def send_file(socket_recv, file_path:str, type:str):
     file = open(file_path, "rb")
     data = file.read()
-    _send(socket_recv, data, file_path, type)
     file.close()
+    _send(socket_recv, data, file_path, type)
