@@ -68,8 +68,8 @@ def send_data():
             send_text(socket_test_client, msg)
 
 
-#HOST = "62.60.178.229"
-HOST = "127.0.0.1"
+HOST = "62.60.178.229"
+#HOST = "127.0.0.1"
 PORT = 10001
 
 socket_test_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
