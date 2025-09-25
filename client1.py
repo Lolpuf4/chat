@@ -41,6 +41,7 @@ def connect():
         send_text(socket_test_client, password)
         information = recv(socket_test_client)
         if information[0] == "ERR":
+            print(f"you have {log_in_tries} tries left.")
             if log_in_tries > 0:
                 log_in_tries -= 1
                 username, password = get_username_and_password()

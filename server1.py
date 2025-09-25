@@ -67,6 +67,7 @@ def sort_chat_msgs(msgs):
 socket_user = {}
 user_DMuser = {}
 def get_username(client):
+    username = ""
     for i in range(3):
         username = recv(client)[1]
         password = recv(client)[1]
@@ -77,7 +78,8 @@ def get_username(client):
         else:
             send_text(client, "1")
 
-            return username
+            break
+    return username
 
 
 
