@@ -68,13 +68,17 @@ socket_user = {}
 user_DMuser = {}
 def get_username(client):
     username = ""
+    attempts = 0
     for i in range(3):
         username = recv(client)[1]
         password = recv(client)[1]
 
         if not execute_command(f"SELECT username FROM users WHERE username = {username} AND password = {password};", "admin", "123", "messenger"):
             send_error(client, "authentication failed")
-            return None
+            attempts +=1
+            if attempts == 3:
+                return None
+
         else:
             send_text(client, "1")
 
