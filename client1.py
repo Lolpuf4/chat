@@ -86,7 +86,7 @@ def send_data():
 
 HOST = "62.60.178.229"
 #HOST = "127.0.0.1"
-PORT = 10003
+PORT = 10005
 
 socket_test_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_test_client.connect((HOST, PORT))
