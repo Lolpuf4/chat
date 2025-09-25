@@ -4,13 +4,21 @@ import os
 import datetime
 import json
 import time
+from multiprocessing.context import AuthenticationError
 
 from errors import*
 from protocol import*
 from os.path import exists
 
 
+def get_username_and_password():
+    username = input("enter a username for yourself ")
+    password = input("enter a password for yourself ")
+    return username, password
+
+
 def connect():
+    log_in_tries = 3
     result = exists("cookie.json")
     if result:
         file = open("cookie.json", "r", encoding="UTF-8")
@@ -23,23 +31,28 @@ def connect():
             username = data["username"]
             password = data["password"]
         else:
-            username = input("enter a username for yourself ")
-            password = input("enter a password for yourself ")
+            username, password = get_username_and_password()
 
     else:
         username = input("enter a username for yourself ")
         password = input("enter a password for yourself ")
-    send_text(socket_test_client, username)
-    send_text(socket_test_client, password)
-    information = recv(socket_test_client)
-    if information[0] == "ERR":
-        raise ServerError(information[1])
-    elif information[0] == "TXT":
-        file = open("cookie.json", "w", encoding = "UTF-8")
-        file_info = {"username":username, "password" : password, "date": datetime.date.today().strftime("%Y/%m/%d")}
-        json.dump(file_info, file)
-        file.close()
-        print("you logged on.")
+    for i in range(3):
+        send_text(socket_test_client, username)
+        send_text(socket_test_client, password)
+        information = recv(socket_test_client)
+        if information[0] == "ERR":
+            if log_in_tries > 0:
+                log_in_tries -= 1
+                username, password = get_username_and_password()
+            else:
+                raise AuthenticationError
+        elif information[0] == "TXT":
+            file = open("cookie.json", "w", encoding = "UTF-8")
+            file_info = {"username":username, "password" : password, "date": datetime.date.today().strftime("%Y/%m/%d")}
+            json.dump(file_info, file)
+            file.close()
+            print("you logged on.")
+            break
 
 def choose_DM():
     information = recv(socket_test_client)[1]
