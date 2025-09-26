@@ -63,7 +63,7 @@ def choose_DM():
         print(information)
         num = input("enter a number of the user you would like to DM ")
         send_text(socket_test_client, num)
-        ans = recv(socket)
+        ans = recv(socket_test_client)
         if ans[0]== "ERR":
             print(ans[1])
         else:
