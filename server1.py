@@ -103,7 +103,7 @@ def choose_DM(username, client):
         information = recv(client)[1]
         if information == "exit":
             return "exit"
-        if information <= len(DMs):
+        if int(information) <= len(DMs):
             send_text(client, "DM chosen")
             DM_user = DMs[int(information)]
             return DM_user
