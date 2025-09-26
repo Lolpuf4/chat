@@ -4,7 +4,7 @@ import os
 import datetime
 import json
 import time
-from multiprocessing.context import AuthenticationError
+
 
 from errors import*
 from protocol import*
@@ -47,7 +47,8 @@ def connect():
             if log_in_tries > 0:
                 username, password = get_username_and_password()
             else:
-                raise AuthenticationError
+                raise ConnectionError("Authentication Error")
+
         elif information[0] == "TXT":
             file = open("cookie.json", "w", encoding = "UTF-8")
             file_info = {"username":username, "password" : password, "date": datetime.date.today().strftime("%Y/%m/%d")}
