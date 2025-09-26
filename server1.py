@@ -99,13 +99,16 @@ def choose_DM(username, client):
         num += 1
 
     send_text(client, choose_DM_msg)
-
-    information = recv(client)[1]
-    if information == "exit":
-        return "exit"
-    DM_user = DMs[int(information)]
-    return DM_user
-
+    while True:
+        information = recv(client)[1]
+        if information == "exit":
+            return "exit"
+        if information <= len(DMs):
+            send_text(client, "DM chosen")
+            DM_user = DMs[int(information)]
+            return DM_user
+        else:
+            send_error(client, "wrong number")
 def send_msg(DM_user, client, username):
     while True:
 

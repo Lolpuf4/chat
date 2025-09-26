@@ -59,10 +59,15 @@ def connect():
 
 def choose_DM():
     information = recv(socket_test_client)[1]
-    print(information, "CHOOOOOOOSE DM")
-    num = input("enter a number of the user you would like to DM ")
-    send_text(socket_test_client, num)
-    return num
+    while True:
+        print(information)
+        num = input("enter a number of the user you would like to DM ")
+        send_text(socket_test_client, num)
+        ans = recv(socket)
+        if ans[0]== "ERR":
+            print(ans[1])
+        else:
+            return num
 
 def get_old_chat():
     information = recv(socket_test_client)[1]
