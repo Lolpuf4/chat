@@ -3,8 +3,8 @@ import threading
 import json
 from protocol import*
 from errors import*
-HOST = "62.60.178.229"
-#HOST = "127.0.0.1"
+#HOST = "62.60.178.229"
+HOST = "127.0.0.1"
 PORT = 10002
 
 def execute_command(command, user, password, database = ""):

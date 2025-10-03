@@ -71,7 +71,21 @@ def choose_DM():
 
 def get_old_chat():
     information = recv(socket_test_client)[1]
-    print(information)
+
+    file = open(information, "r", encoding = "UTF-8")
+    data = json.load(file)
+    file.close()
+    chat_data = data["msgs"]
+
+    chat = ""
+    for record in chat_data:
+        if record["message_history.receiverID"] == data["recvID"]:
+            chat += f"                       {record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
+        else:
+            chat += f"{record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
+
+    print(chat)
+
 
 def getdata(client):
     while True:
@@ -92,8 +106,8 @@ def send_data():
     time.sleep(0.4)
 
 
-HOST = "62.60.178.229"
-#HOST = "127.0.0.1"
+#HOST = "62.60.178.229"
+HOST = "127.0.0.1"
 PORT = 10008
 
 socket_test_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

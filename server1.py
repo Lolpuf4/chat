@@ -163,19 +163,13 @@ def handle_client(client, address):
 
 
         sort_chat_msgs(old_msgs)
+        new_old_msgs = {"msgs" : old_msgs, "recvID" : receiverID}
 
-        amount_of_spaces = 10
+        file = open("temp.json", "w", encoding = "UTF-8")
+        json.dump(new_old_msgs, file)
+        file.close()
 
-        chat = ""
-
-        for record in old_msgs:
-            if record["message_history.receiverID"] == receiverID:
-                chat += f"                       {record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
-            else:
-                chat += f"{record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
-
-        send_text(client, chat)
-
+        send_file(client, "temp.json", "JSN")
 
         send_msg(DM_user, client, username)
     # finally:
@@ -184,8 +178,8 @@ def handle_client(client, address):
     #     client.close()
 
 
-HOST = "0.0.0.0"
-#HOST = "127.0.0.1"
+#HOST = "0.0.0.0"
+HOST = "127.0.0.1"
 PORT = 10008
 
 socket_test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
