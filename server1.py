@@ -62,6 +62,31 @@ def sort_chat_msgs(msgs):
                 msgs[j+1] = temp
 
 
+def organize_list(username):
+    ans = {}
+    senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
+    for DM_user in get_usernames(username):
+
+        receiverID = execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
+
+        old_msgs_sender = execute_command(
+            f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
+            f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID};",
+            "admin", "123", "messenger")
+
+        old_msgs_receiver = execute_command(
+            f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
+            f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {senderID} AND message_history.senderID = {receiverID};",
+            "admin", "123", "messenger")
+
+        old_msgs = old_msgs_sender + old_msgs_receiver
+
+        sort_chat_msgs(old_msgs)
+
+        new_old_msgs = {"msgs": old_msgs, "senderID": senderID}
+        ans[DM_user] = new_old_msgs
+    return ans
+
 
 
 socket_user = {}
@@ -86,29 +111,32 @@ def get_username(client):
     return username
 
 
-
+def get_usernames(username):
+    DMs = []
+    for i in execute_command(f"SELECT username FROM users WHERE username != {username};", "admin", "123", "messenger"):
+        DMs.append(i["username"])
+    return DMs
 
 
 def choose_DM(username, client):
-    choose_DM_msg = ""
     DMs = {}
     num = 1
-    for i in execute_command(f"SELECT username FROM users WHERE username != {username};", "admin", "123", "messenger"):
-        DMs[num] = i["username"]
-        choose_DM_msg += f"{num}: {i["username"]}\n"
+    for i in get_usernames(username):
+        DMs[num] = i
+
         num += 1
 
-    send_text(client, choose_DM_msg)
-    while True:
-        information = recv(client)[1]
-        if information == "exit":
-            return "exit"
-        if int(information) <= len(DMs):
-            send_text(client, "DM chosen")
-            DM_user = DMs[int(information)]
-            return DM_user
-        else:
-            send_error(client, "wrong number")
+    file = open("temp_users.json", "w", encoding="UTF-8")
+    json.dump(DMs, file)
+    file.close()
+
+    send_file(client, "temp_users.json", "JSN")
+    information = recv(client)[1]
+    if information == "exit":
+        return "exit"
+
+    DM_user = DMs[int(information)]
+    return DM_user
 def send_msg(DM_user, client, username):
     while True:
 
@@ -148,25 +176,16 @@ def handle_client(client, address):
 
             break
         user_DMuser[username] = DM_user
-        senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
-        receiverID = execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
-
-        old_msgs_sender = execute_command(f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
-                                   f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID};", "admin", "123", "messenger")
-
-        old_msgs_receiver = execute_command(
-            f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
-            f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {senderID} AND message_history.senderID = {receiverID};",
-            "admin", "123", "messenger")
-
-        old_msgs = old_msgs_sender + old_msgs_receiver
 
 
-        sort_chat_msgs(old_msgs)
-        new_old_msgs = {"msgs" : old_msgs, "recvID" : receiverID}
+
+        all_chat_history = organize_list(username)
+        print(all_chat_history)
+
+
 
         file = open("temp.json", "w", encoding = "UTF-8")
-        json.dump(new_old_msgs, file)
+        json.dump(all_chat_history, file)
         file.close()
 
         send_file(client, "temp.json", "JSN")

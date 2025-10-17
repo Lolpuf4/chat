@@ -59,15 +59,24 @@ def connect():
 
 def choose_DM():
     information = recv(socket_test_client)[1]
+    file = open(information, "r", encoding="UTF-8")
+    data = json.load(file)
+    file.close()
     while True:
-        print(information)
+        full_msg = ""
+
+        for id in data:
+            full_msg += f"{id}: {data[id]}\n"
+        print(full_msg)
+
         num = input("enter a number of the user you would like to DM ")
-        send_text(socket_test_client, num)
-        ans = recv(socket_test_client)
-        if ans[0]== "ERR":
-            print(ans[1])
+        if num in data or num == "exit":
+            send_text(socket_test_client, num)
+
+            return num, data.get(num)
         else:
-            return num
+            print("wrong number")
+
 
 def get_old_chat():
     information = recv(socket_test_client)[1]
@@ -75,11 +84,12 @@ def get_old_chat():
     file = open(information, "r", encoding = "UTF-8")
     data = json.load(file)
     file.close()
-    chat_data = data["msgs"]
+    print(data)
+    chat_data = data[DM_name]
 
     chat = ""
-    for record in chat_data:
-        if record["message_history.receiverID"] == data["recvID"]:
+    for record in chat_data["msgs"]:
+        if record["message_history.senderID"] == chat_data["senderID"]:
             chat += f"                       {record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
         else:
             chat += f"{record["messages.date"]}, {record["messages.time"]} : {record["messages.text"]}\n"
@@ -103,7 +113,7 @@ def send_data():
             break
         else:
             send_text(socket_test_client, msg)
-    time.sleep(0.4)
+    time.sleep(0.5)
 
 
 #HOST = "62.60.178.229"
@@ -116,7 +126,8 @@ socket_test_client.connect((HOST, PORT))
 connect()
 while True:
 
-    if choose_DM() == "exit":
+    DM_id, DM_name = choose_DM()
+    if DM_id == "exit":
         break
 
     get_old_chat()
