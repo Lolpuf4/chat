@@ -35,6 +35,8 @@ import json
 from DBhelper import execute_command
 from protocol import*
 
+
+
 def sort_chat_msgs(msgs):
     for i in range(len(msgs)):
         for j in range(len(msgs) - 1):
@@ -53,8 +55,9 @@ def sort_chat_msgs(msgs):
             # date1 = datetime.date(date1[0], date1[1], date1[2])
             # date2 = datetime.date(date2[0], date2[1], date2[2])
 
-            datetime1 = datetime.datetime(date1[0], date1[1], date1[2], time1[0], time1[1], time1[2])
-            datetime2 = datetime.datetime(date2[0], date2[1], date2[2], time2[0], time2[1], time2[2])
+            datetime1 = datetime.datetime(date1[2], date1[1], date1[0], time1[0], time1[1], time1[2])
+            datetime2 = datetime.datetime(date2[2], date2[1], date2[0], time2[0], time2[1], time2[2])
+
 
             if datetime1 > datetime2:
                 temp = msgs[j]
@@ -97,7 +100,6 @@ def get_username(client):
     for i in range(3):
         username = recv(client)[1]
         password = recv(client)[1]
-
         if not execute_command(f"SELECT username FROM users WHERE username = {username} AND password = {password};", "admin", "123", "messenger"):
             send_error(client, "authentication failed")
             attempts +=1
@@ -108,6 +110,7 @@ def get_username(client):
             send_text(client, "1")
 
             break
+
     return username
 
 
@@ -118,49 +121,42 @@ def get_usernames(username):
     return DMs
 
 
-def choose_DM(username, client):
-    DMs = {}
-    num = 1
-    for i in get_usernames(username):
-        DMs[num] = i
 
-        num += 1
-
-    file = open("temp_users.json", "w", encoding="UTF-8")
-    json.dump(DMs, file)
-    file.close()
-
-    send_file(client, "temp_users.json", "JSN")
-    information = recv(client)[1]
-    if information == "exit":
-        return "exit"
-
-    DM_user = DMs[int(information)]
-    return DM_user
-def send_msg(DM_user, client, username):
+def send_msg(client, username):
     while True:
 
-        information = recv(client)[1].encode()
+        information = recv(client)
 
         print("information", information)
-        if information == b"1":
+        if information[0] == "ERR" and information[1] == "1":
             print("stopped receiving information")
             send_error(client, "1")
-            del user_DMuser[username]
             break
+        elif information[0] == "DIC":
+            data = json.loads(information[1])
+            DM_user = data["user"]
+            original_message = data["msg"]
+
         date = datetime.datetime.now().strftime("%d/%m/%y")
         time = datetime.datetime.now().strftime("%H:%M:%S")
-        original_message = information.decode()
-        full_message = date + "   " + time + ":   " + original_message
 
         msgID = execute_command(f"INSERT INTO messages (text, date, time) VALUES ({original_message}, {date}, {time});", "admin", "123", "messenger")
         senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
         receiverID = execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
         execute_command(f"INSERT INTO message_history (senderID, receiverID, msgID) VALUES ({senderID}, {receiverID}, {msgID});", "admin", "123", "messenger")
 
-        if DM_user in socket_user and user_DMuser[DM_user] == username:
-            recv_user = socket_user[DM_user]
-            send_text(recv_user, full_message)
+        last_msg = execute_command(
+            f"SELECT * FROM message_history JOIN users ON message_history.senderID = users.id "
+            f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID} AND messages.id = {msgID};",
+            "admin", "123", "messenger")[0]
+
+        if DM_user in socket_user:
+            print(f"socket user: {socket_user}")
+            recv_socket = socket_user[DM_user]
+            file = open("recv_files/last_msg.json", "w", encoding = "UTF-8")
+            json.dump(last_msg, file)
+            file.close()
+            send_file(recv_socket, "recv_files/last_msg.json", "JSN")
 def handle_client(client, address):
     print(f"working on: {address}")
     username = get_username(client)
@@ -169,28 +165,17 @@ def handle_client(client, address):
 
     socket_user[username] = client
     while True:
-        DM_user = choose_DM(username, client)
-        if DM_user == "exit":
-            del socket_user[username]
-            client.close()
-
-            break
-        user_DMuser[username] = DM_user
-
-
-
         all_chat_history = organize_list(username)
         print(all_chat_history)
 
-
-
-        file = open("temp.json", "w", encoding = "UTF-8")
+        file = open("temp.json", "w", encoding="UTF-8")
         json.dump(all_chat_history, file)
         file.close()
 
         send_file(client, "temp.json", "JSN")
 
-        send_msg(DM_user, client, username)
+
+        send_msg(client, username)
     # finally:
     #     del socket_user[username]
     #     del user_DMuser[username]

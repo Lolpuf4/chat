@@ -27,7 +27,7 @@ def connect():
         last_login_date = datetime.date(*list(map(int, data["date"].split("/"))))
         today = datetime.date.today()
         print((today - last_login_date).days < 8)
-        if (today - last_login_date).days < 8:
+        if (today - last_login_date).days < -1:
             username = data["username"]
             password = data["password"]
         else:
@@ -57,25 +57,6 @@ def connect():
             print("you logged on.")
             break
 
-def choose_DM():
-    information = recv(socket_test_client)[1]
-    file = open(information, "r", encoding="UTF-8")
-    data = json.load(file)
-    file.close()
-    while True:
-        full_msg = ""
-
-        for id in data:
-            full_msg += f"{id}: {data[id]}\n"
-        print(full_msg)
-
-        num = input("enter a number of the user you would like to DM ")
-        if num in data or num == "exit":
-            send_text(socket_test_client, num)
-
-            return num, data.get(num)
-        else:
-            print("wrong number")
 
 
 def get_old_chat():
@@ -84,7 +65,10 @@ def get_old_chat():
     file = open(information, "r", encoding = "UTF-8")
     data = json.load(file)
     file.close()
-    print(data)
+    return data
+
+
+def print_chat(data):
     chat_data = data[DM_name]
 
     chat = ""
@@ -96,7 +80,6 @@ def get_old_chat():
 
     print(chat)
 
-
 def getdata(client):
     while True:
         information = recv(client)[1].encode()
@@ -104,7 +87,16 @@ def getdata(client):
             break
         elif information == b"":
             continue
-        print("\n" + information.decode())
+
+        file = open(information, "r", encoding = "UTF-8")
+        data = json.load(file)
+        file.close()
+        if data["users.username"] == DM_name:
+            print("\n" + data["messages.text"])
+        else:
+            print(f"you got a new message from {data["users.username"]}")
+
+
 def send_data():
     while True:
         msg = input("")
@@ -112,8 +104,19 @@ def send_data():
             send_error(socket_test_client, "1")
             break
         else:
-            send_text(socket_test_client, msg)
+            send_json(socket_test_client, {"msg": msg,  "user" : DM_name})
     time.sleep(0.5)
+
+def get_DM_user(usernames):
+    text = ""
+    for id, name in enumerate(usernames):
+        text += f"{id + 1}: {name}\n"
+    print(text)
+    result = input("enter the id of the user, or 'exit' ")
+    if result == "exit":
+        return "exit"
+    else:
+        return usernames[int(result) - 1]
 
 
 #HOST = "62.60.178.229"
@@ -124,13 +127,15 @@ socket_test_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_test_client.connect((HOST, PORT))
 
 connect()
-while True:
 
-    DM_id, DM_name = choose_DM()
-    if DM_id == "exit":
+while True:
+    full_history = get_old_chat()
+    usernames = list(full_history.keys())
+    DM_name = get_DM_user(usernames)
+    if DM_name == "exit":
         break
 
-    get_old_chat()
+    print_chat(full_history)
 
     get_data = threading.Thread(target = getdata, args = [socket_test_client])
     get_data.start()
