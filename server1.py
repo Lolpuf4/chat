@@ -130,7 +130,6 @@ def send_msg(client, username):
         print("information", information)
         if information[0] == "ERR" and information[1] == "1":
             print("stopped receiving information")
-            send_error(client, "1")
             break
         elif information[0] == "DIC":
             data = json.loads(information[1])
@@ -139,6 +138,8 @@ def send_msg(client, username):
 
         date = datetime.datetime.now().strftime("%d/%m/%y")
         time = datetime.datetime.now().strftime("%H:%M:%S")
+
+        print(original_message)
 
         msgID = execute_command(f"INSERT INTO messages (text, date, time) VALUES ({original_message}, {date}, {time});", "admin", "123", "messenger")
         senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
@@ -164,22 +165,20 @@ def handle_client(client, address):
         return
 
     socket_user[username] = client
-    while True:
-        all_chat_history = organize_list(username)
-        print(all_chat_history)
 
-        file = open("temp.json", "w", encoding="UTF-8")
-        json.dump(all_chat_history, file)
-        file.close()
+    all_chat_history = organize_list(username)
+    print(all_chat_history)
 
-        send_file(client, "temp.json", "JSN")
+    file = open("temp.json", "w", encoding="UTF-8")
+    json.dump(all_chat_history, file)
+    file.close()
+
+    send_file(client, "temp.json", "JSN")
 
 
-        send_msg(client, username)
-    # finally:
-    #     del socket_user[username]
-    #     del user_DMuser[username]
-    #     client.close()
+    send_msg(client, username)
+    del socket_user[username]
+    client.close()
 
 
 #HOST = "0.0.0.0"
