@@ -31,8 +31,8 @@ import threading
 import datetime
 import json
 
-from DBhelper import execute_command
-from protocol import *
+from DBhelper import DBhelper
+from protocol import protocol
 
 
 def sort_chat_msgs(msgs):
@@ -64,18 +64,18 @@ def sort_chat_msgs(msgs):
 
 def organize_list(username):
     ans = {}
-    senderID = execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0][
+    senderID = DBhelper.execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0][
         "id"]
     for DM_user in get_usernames(username):
         receiverID = \
-        execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
+        DBhelper.execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
 
-        old_msgs_sender = execute_command(
+        old_msgs_sender = DBhelper.execute_command(
             f"SELECT messages.text, messages.date, messages.time, users.username, message_history.senderID, message_history.receiverID FROM message_history JOIN users ON message_history.senderID = users.id "
             f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID};",
             "admin", "123", "messenger")
 
-        old_msgs_receiver = execute_command(
+        old_msgs_receiver = DBhelper.execute_command(
             f"SELECT messages.text, messages.date, messages.time, users.username, message_history.senderID, message_history.receiverID FROM message_history JOIN users ON message_history.senderID = users.id "
             f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {senderID} AND message_history.senderID = {receiverID};",
             "admin", "123", "messenger")
@@ -101,17 +101,17 @@ def get_username(client):
     username = ""
     attempts = 0
     for i in range(3):
-        username = recv(client)[1]
-        password = recv(client)[1]
-        if not execute_command(f"SELECT username FROM users WHERE username = {username} AND password = {password};",
+        username = protocol.recv(client)[1]
+        password = protocol.recv(client)[1]
+        if not DBhelper.execute_command(f"SELECT username FROM users WHERE username = {username} AND password = {password};",
                                "admin", "123", "messenger"):
-            send_error(client, "authentication failed")
+            protocol.send_error(client, "authentication failed")
             attempts += 1
             if attempts == 3:
                 return None
 
         else:
-            send_text(client, "1")
+            protocol.send_text(client, "1")
 
             break
 
@@ -120,7 +120,7 @@ def get_username(client):
 
 def get_usernames(username):
     DMs = []
-    for i in execute_command(f"SELECT username FROM users WHERE username != {username};", "admin", "123", "messenger"):
+    for i in DBhelper.execute_command(f"SELECT username FROM users WHERE username != {username};", "admin", "123", "messenger"):
         DMs.append(i["username"])
     return DMs
 
@@ -128,7 +128,7 @@ def get_usernames(username):
 def send_msg(client, username):
     while True:
 
-        information = recv(client)
+        information = protocol.recv(client)
 
         print("information", information)
         if information[0] == "ERR" and information[1] == "1":
@@ -144,17 +144,17 @@ def send_msg(client, username):
 
         print(original_message)
 
-        msgID = execute_command(f"INSERT INTO messages (text, date, time) VALUES ({original_message}, {date}, {time});",
+        msgID = DBhelper.execute_command(f"INSERT INTO messages (text, date, time) VALUES ({original_message}, {date}, {time});",
                                 "admin", "123", "messenger")
         senderID = \
-        execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
+        DBhelper.execute_command(f"SELECT id FROM users WHERE username = {username};", "admin", "123", "messenger")[0]["id"]
         receiverID = \
-        execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
-        execute_command(
+        DBhelper.execute_command(f"SELECT id FROM users WHERE username = {DM_user};", "admin", "123", "messenger")[0]["id"]
+        DBhelper.execute_command(
             f"INSERT INTO message_history (senderID, receiverID, msgID) VALUES ({senderID}, {receiverID}, {msgID});",
             "admin", "123", "messenger")
 
-        last_msg = execute_command(
+        last_msg = DBhelper.execute_command(
             f"SELECT messages.text, messages.date, messages.time, users.username, message_history.senderID, message_history.receiverID FROM message_history JOIN users ON message_history.senderID = users.id "
             f"JOIN messages ON message_history.msgID = messages.id WHERE message_history.receiverID = {receiverID} AND message_history.senderID = {senderID} AND messages.id = {msgID};",
             "admin", "123", "messenger")[0]
@@ -165,7 +165,7 @@ def send_msg(client, username):
             file = open("recv_files/last_msg.json", "w", encoding="UTF-8")
             json.dump(last_msg, file)
             file.close()
-            send_file(recv_socket, "recv_files/last_msg.json", "JSN")
+            protocol.send_file(recv_socket, "recv_files/last_msg.json", "JSN")
 
 
 def handle_client(client, address):
@@ -183,7 +183,7 @@ def handle_client(client, address):
     json.dump(all_chat_history, file)
     file.close()
 
-    send_file(client, "temp.json", "JSN")
+    protocol.send_file(client, "temp.json", "JSN")
 
     send_msg(client, username)
     del socket_user[username]

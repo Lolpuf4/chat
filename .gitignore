@@ -1,7 +1,7 @@
 *.json
 recv_files
-threads 1.py
 .idea
 venv
 __pycache__
-testclient2
+DBhelper
+protocol
