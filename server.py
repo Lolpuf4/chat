@@ -192,7 +192,7 @@ def handle_client(client, address):
 
 HOST = "0.0.0.0"
 #HOST = "127.0.0.1"
-PORT = 10008
+PORT = 10009
 
 socket_test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
